@@ -1,7 +1,15 @@
-// ================= 主控台、存檔、取名與打工計時模組 =================
+// ================= 確保全域優先定義的鍵盤事件控制函數 =================
+let currentKeyHandler = null; 
+
+function setKeyHandler(handler) {
+    if (currentKeyHandler) document.removeEventListener('keydown', currentKeyHandler);
+    currentKeyHandler = handler;
+    document.addEventListener('keydown', currentKeyHandler);
+}
+
+// ================= 主控台、存檔、改名與打工計時模組 =================
 let hungerTimer = null; 
 let gameIntervals = [], score = 0, lives = 3, isGameRunning = false;
-let currentKeyHandler = null; 
 let petName = "小寶貝"; // 預設寵物名字
 
 function startHungerTimer() {
@@ -46,11 +54,10 @@ function loadGame() {
                 say(`你不在的這段時間，${petName} 好想你，掉了 ${loss} 點數值！🥺`);
             }
         } else {
-            say(`歡迎回來！和小 ${petName} 一起玩吧！`);
+            say(`歡迎回來！和 ${petName} 一起玩吧！`);
         }
     } else {
         food = 50; happy = 50; 
-        // 第一次玩時跳出取名視窗
         let inputName = prompt("恭喜獲得新寵物！請幫牠取個名字：", "奇幻島小怪獸");
         if (inputName && inputName.trim() !== "") {
             petName = inputName.trim();
@@ -68,7 +75,7 @@ function saveGame() {
         localStorage.setItem('monsterCoins', coins);
         localStorage.setItem('monsterLevel', petLevel);
         localStorage.setItem('monsterExp', exp);
-        localStorage.setItem('monsterName', petName); // 儲存名字
+        localStorage.setItem('monsterName', petName);
         localStorage.setItem('monsterBag', JSON.stringify(bag));
         localStorage.setItem('monsterLastTime', Date.now());
     }
@@ -89,7 +96,19 @@ function hardReset() {
     }
 }
 
-// 遊戲室選單（只負責打開視窗，不扣飽食度）
+// 隨時更名函數 (掛載到 window 供全域 HTML 呼叫)
+window.changePetName = function() {
+    let newName = prompt(`請輸入新的寵物名字：`, petName);
+    if (newName && newName.trim() !== "") {
+        petName = newName.trim();
+        document.getElementById('pName').innerText = petName;
+        say(`太棒了！以後我就叫做【${petName}】囉！🎉`);
+        playAnimation('jump');
+        saveGame();
+    }
+};
+
+// 遊戲室選單
 function openMenu() {
     if(!isAlive) return;
 
@@ -103,17 +122,11 @@ function openMenu() {
     document.getElementById('gameMsg').style.display = 'none';
     document.getElementById('modalTitle').innerText = "選擇要打工的遊戲！(10分=1金幣)";
 }
-// ================= 鍵盤事件控制函數 =================
-function setKeyHandler(handler) {
-    if (currentKeyHandler) document.removeEventListener('keydown', currentKeyHandler);
-    currentKeyHandler = handler;
-    document.addEventListener('keydown', currentKeyHandler);
-}
-// ⭐ 核心修改：建立一個「點擊具體遊戲才扣10點飽食度」的通用觸發函數
+
+// 點擊具體遊戲才扣 10 點飽食度
 function payAndStartGame(gameInitFunction) {
     if(!isAlive) return;
     
-    // 每次點進去玩具體遊戲時，立刻扣 10 點飽食度
     food = Math.max(0, food - 10);
     updateUI();
     saveGame();
@@ -124,7 +137,6 @@ function payAndStartGame(gameInitFunction) {
         say(`開始打工賺錢囉！${petName} 消耗了 10 點體力！💪`);
     }
 
-    // 執行該遊戲原本的初始化邏輯
     gameInitFunction();
 }
 
@@ -194,17 +206,7 @@ function endGameMsg(text) {
     msg.innerText = text; msg.style.display = 'block';
     document.getElementById('btnEndGame').innerText = "領取薪水並返回";
 }
-// ================= 隨時更改寵物名字的函數 =================
-function changePetName() {
-    let newName = prompt(`請輸入新的寵物名字：`, petName);
-    if (newName && newName.trim() !== "") {
-        petName = newName.trim();
-        document.getElementById('pName').innerText = petName;
-        say(`太棒了！以後我就叫做【${petName}】囉！🎉`);
-        playAnimation('jump');
-        saveGame();
-    }
-}
+
 // 啟動主程式
 loadGame();
 startHungerTimer();
