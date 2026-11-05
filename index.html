@@ -2,26 +2,119 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>我的專屬電子寵物</title>
+    <title>奇幻島科學 - 神秘小怪獸</title>
     <style>
-        body { text-align: center; font-family: sans-serif; background-color: #f0f8ff; padding-top: 50px; }
-        .pet { font-size: 100px; margin: 20px; transition: transform 0.2s; user-select: none; cursor: pointer; }
-        .pet:active { transform: scale(1.2); }
-        .stats { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333; }
-        button { font-size: 20px; padding: 10px 20px; margin: 10px; cursor: pointer; border-radius: 10px; background-color: #ffb6c1; border: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); }
+        body { 
+            text-align: center; 
+            font-family: "Microsoft JhengHei", sans-serif; 
+            background-color: #f0f8ff; 
+            padding-top: 30px; 
+        }
+        
+        /* 數值面板 */
+        .stats { 
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            background: white;
+            display: inline-block;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 對話框樣式 */
+        .speech-bubble {
+            display: inline-block;
+            background-color: #fff;
+            border-radius: 20px;
+            padding: 15px 25px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        /* 對話框的下巴小三角形 */
+        .speech-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+
+        /* 寵物圖片樣式 */
+        .pet-container {
+            margin: 20px auto;
+            height: 250px;
+        }
+        #petImg { 
+            width: 200px; 
+            height: 200px;
+            /* 加入平滑過渡效果 */
+            transition: all 0.3s; 
+        }
+
+        /* 按鈕樣式 */
+        button { 
+            font-size: 20px; 
+            padding: 12px 25px; 
+            margin: 10px; 
+            cursor: pointer; 
+            border-radius: 10px; 
+            background-color: #ffb6c1; 
+            border: 2px solid #ff69b4; 
+            font-weight: bold;
+            box-shadow: 2px 4px 0px #ff69b4; 
+        }
         button:hover { background-color: #ff69b4; color: white; }
+        button:active { box-shadow: 0px 0px 0px; transform: translateY(4px); }
+
+        /* --- 精彩的動畫特效 --- */
+        /* 彈跳動畫 (餵食) */
+        @keyframes jumpAnim {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        .jump { animation: jumpAnim 0.5s ease-in-out; }
+
+        /* 搖晃動畫 (玩耍) */
+        @keyframes shakeAnim {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .shake { animation: shakeAnim 0.5s ease-in-out; }
+
     </style>
 </head>
 <body>
 
-    <h1>👾 實驗室小怪獸養成計畫 👾</h1>
+    <h1>👾 專屬電子怪獸 👾</h1>
     
     <div class="stats">
-        🍖 飽食度: <span id="food">50</span> / 100 <br><br>
+        🍖 飽食度: <span id="food">50</span> / 100 <br>
         🎾 開心度: <span id="happy">50</span> / 100
     </div>
 
-    <div class="pet" id="petEmoji">👽</div>
+    <br>
+    
+    <!-- 對話框 -->
+    <div class="speech-bubble" id="dialogue">你好！我是奇幻島的小怪獸！</div>
+
+    <!-- 圖片區塊 -->
+    <div class="pet-container">
+        <!-- 這裡把 Emoji 換成了 img 標籤 -->
+        <img id="petImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=normal" alt="怪獸圖片">
+    </div>
 
     <div>
         <button onclick="feed()">🍖 餵食</button>
@@ -29,45 +122,96 @@
     </div>
 
     <script>
+        // 1. 遊戲初始數值
         let food = 50;
         let happy = 50;
+        let isAlive = true;
 
+        // 2. 準備四種不同狀態的圖片網址 (學生可以在這裡換成自己的圖片網址)
+        const imgNormal = "https://api.dicebear.com/7.x/bottts/svg?seed=normal"; // 普通
+        const imgHappy = "https://api.dicebear.com/7.x/bottts/svg?seed=happy";   // 開心
+        const imgSad = "https://api.dicebear.com/7.x/bottts/svg?seed=sad";       // 傷心/肚子餓
+        const imgDead = "https://api.dicebear.com/7.x/bottts/svg?seed=dead";     // 離開/結束
+
+        const petImageElement = document.getElementById('petImg');
+        const dialogueElement = document.getElementById('dialogue');
+
+        // 3. 顯示對話文字的函數
+        function say(text) {
+            dialogueElement.innerText = text;
+        }
+
+        // 4. 播放動畫的函數
+        function playAnimation(animationClass) {
+            // 先移除原有的動畫 class，重新加上去才會觸發動畫
+            petImageElement.classList.remove('jump', 'shake');
+            void petImageElement.offsetWidth; // 觸發瀏覽器重繪 (這行是動畫重啟的魔法)
+            petImageElement.classList.add(animationClass);
+        }
+
+        // 5. 更新畫面與圖片狀態
         function updateUI() {
-            // 更新數字顯示
             document.getElementById('food').innerText = food;
             document.getElementById('happy').innerText = happy;
             
-            // 根據數值改變寵物表情
-            let pet = document.getElementById('petEmoji');
+            if (!isAlive) return; // 如果已經結束遊戲，就不更新表情了
+
             if (food <= 0 || happy <= 0) {
-                pet.innerText = "👻";
-                document.querySelector('h1').innerText = "小怪獸離開了...";
+                isAlive = false;
+                petImageElement.src = imgDead;
+                say("我先離開囉，掰掰 👻");
+                document.querySelector('h1').innerText = "遊戲結束...";
             } else if (food < 30 || happy < 30) {
-                pet.innerText = "😭";
+                petImageElement.src = imgSad;
+                say("我感覺不太好... 幫幫我！😭");
             } else if (food > 80 && happy > 80) {
-                pet.innerText = "🥰";
+                petImageElement.src = imgHappy;
             } else {
-                pet.innerText = "👽";
+                petImageElement.src = imgNormal;
             }
         }
 
+        // 6. 按下餵食按鈕
         function feed() {
-            if (food > 0 && happy > 0 && food < 100) food += 10;
-            updateUI();
+            if (!isAlive) return; // 死掉不能按
+            
+            if (food < 100) {
+                food += 10;
+                if (food > 100) food = 100;
+            }
+            
+            say("好好吃喔！🍖 Yummy!"); // 文字回饋
+            playAnimation('jump');       // 動畫回饋：彈跳
+            updateUI();                  // 圖片與數值回饋
         }
 
+        // 7. 按下玩耍按鈕
         function play() {
-            if (food > 0 && happy > 0 && happy < 100) happy += 10;
-            updateUI();
+            if (!isAlive) return; 
+            
+            if (happy < 100) {
+                happy += 10;
+                if (happy > 100) happy = 100;
+            }
+            
+            say("太好玩了！🎾 哈哈！");   // 文字回饋
+            playAnimation('shake');       // 動畫回饋：搖晃
+            updateUI();                   // 圖片與數值回饋
         }
 
-        // 每 3 秒自動扣數值，模擬時間流逝
+        // 8. 時間系統：每 3 秒自動扣數值
         setInterval(() => {
-            if (food > 0) food -= 5;
-            if (happy > 0) happy -= 5;
-            updateUI();
+            if (isAlive) {
+                if (food > 0) food -= 5;
+                if (happy > 0) happy -= 5;
+                updateUI();
+                
+                // 如果沒有在特別的狀態，就說些隨機台詞
+                if (food >= 30 && happy >= 30 && food <= 80 && Math.random() > 0.5) {
+                    say("今天天氣真好啊～");
+                }
+            }
         }, 3000);
     </script>
-
 </body>
 </html>
