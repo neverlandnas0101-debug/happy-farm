@@ -103,7 +103,12 @@ function openMenu() {
     document.getElementById('gameMsg').style.display = 'none';
     document.getElementById('modalTitle').innerText = "選擇要打工的遊戲！(10分=1金幣)";
 }
-
+// ================= 鍵盤事件控制函數 =================
+function setKeyHandler(handler) {
+    if (currentKeyHandler) document.removeEventListener('keydown', currentKeyHandler);
+    currentKeyHandler = handler;
+    document.addEventListener('keydown', currentKeyHandler);
+}
 // ⭐ 核心修改：建立一個「點擊具體遊戲才扣10點飽食度」的通用觸發函數
 function payAndStartGame(gameInitFunction) {
     if(!isAlive) return;
