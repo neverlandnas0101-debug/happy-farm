@@ -1,186 +1,73 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>網頁版開心農場</title>
+    <title>我的專屬電子寵物</title>
     <style>
-        body {
-            font-family: "Microsoft JhengHei", Arial, sans-serif;
-            background-color: #eef2f3;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #2c3e50;
-        }
-        .dashboard {
-            font-size: 20px;
-            background: white;
-            display: inline-block;
-            padding: 10px 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .farm-container {
-            display: grid;
-            grid-template-columns: repeat(2, 160px);
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .plot {
-            background-color: #8B4513;
-            border: 4px solid #5c2c16;
-            border-radius: 12px;
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-            user-select: none;
-            transition: 0.2s;
-            box-shadow: inset 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .plot:hover {
-            transform: scale(1.03);
-        }
-        .shop {
-            background: white;
-            display: inline-block;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        button {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            margin: 5px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #219653;
-        }
-        .log {
-            margin-top: 15px;
-            font-size: 16px;
-            color: #c0392b;
-            font-weight: bold;
-            height: 24px;
-        }
+        body { text-align: center; font-family: sans-serif; background-color: #f0f8ff; padding-top: 50px; }
+        .pet { font-size: 100px; margin: 20px; transition: transform 0.2s; user-select: none; cursor: pointer; }
+        .pet:active { transform: scale(1.2); }
+        .stats { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333; }
+        button { font-size: 20px; padding: 10px 20px; margin: 10px; cursor: pointer; border-radius: 10px; background-color: #ffb6c1; border: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); }
+        button:hover { background-color: #ff69b4; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>🌻 網頁版開心農場 🌻</h1>
-
-    <div class="dashboard">
-        💰 金錢: <span id="money">100</span> 元 | 
-        🎒 選擇種子: 
-        <select id="seedType">
-            <option value="carrot">🥕 蘿蔔 (成本:20, 售價:50, 3秒)</option>
-            <option value="cabbage">🥬 高麗菜 (成本:40, 售價:110, 5秒)</option>
-        </select>
+    <h1>👾 實驗室小怪獸養成計畫 👾</h1>
+    
+    <div class="stats">
+        🍖 飽食度: <span id="food">50</span> / 100 <br><br>
+        🎾 開心度: <span id="happy">50</span> / 100
     </div>
 
-    <!-- 4塊農田 -->
-    <div class="farm-container">
-        <div class="plot" id="plot-0" onclick="clickPlot(0)">🌾 空地<br><span style="font-size:12px;">(點擊種植)</span></div>
-        <div class="plot" id="plot-1" onclick="clickPlot(1)">🌾 空地<br><span style="font-size:12px;">(點擊種植)</span></div>
-        <div class="plot" id="plot-2" onclick="clickPlot(2)">🌾 空地<br><span style="font-size:12px;">(點擊種植)</span></div>
-        <div class="plot" id="plot-3" onclick="clickPlot(3)">🌾 空地<br><span style="font-size:12px;">(點擊種植)</span></div>
-    </div>
+    <div class="pet" id="petEmoji">👽</div>
 
-    <div class="log" id="logMsg">歡迎來到農場，請選擇種子點擊土地開始種植！</div>
+    <div>
+        <button onclick="feed()">🍖 餵食</button>
+        <button onclick="play()">🎾 玩耍</button>
+    </div>
 
     <script>
-        // 遊戲狀態資料
-        let money = 100;
-        let plots = [
-            { state: 'empty', crop: null, timer: null, progress: 0, maxTime: 0 },
-            { state: 'empty', crop: null, timer: null, progress: 0, maxTime: 0 },
-            { state: 'empty', crop: null, timer: null, progress: 0, maxTime: 0 },
-            { state: 'empty', crop: null, timer: null, progress: 0, maxTime: 0 }
-        ];
-
-        const cropData = {
-            carrot: { name: "🥕 蘿蔔", cost: 20, reward: 50, time: 3 },
-            cabbage: { name: "🥬 高麗菜", cost: 40, reward: 110, time: 5 }
-        };
+        let food = 50;
+        let happy = 50;
 
         function updateUI() {
-            document.getElementById("money").innerText = money;
-
-            for (let i = 0; i < 4; i++) {
-                let plotDiv = document.getElementById(`plot-${i}`);
-                let p = plots[i];
-
-                if (p.state === 'empty') {
-                    plotDiv.style.backgroundColor = "#8B4513";
-                    plotDiv.innerHTML = "🌾 空地<br><span style='font-size:12px;'>(點擊種植)</span>";
-                } else if (p.state === 'growing') {
-                    plotDiv.style.backgroundColor = "#b5651d";
-                    let leftTime = p.maxTime - p.progress;
-                    plotDiv.innerHTML = `${p.crop.name}<br>🌱 生長中 (${leftTime}s)`;
-                } else if (p.state === 'ready') {
-                    plotDiv.style.backgroundColor = "#f1c40f";
-                    plotDiv.innerHTML = `${p.crop.name}<br>🌟 可收成！`;
-                }
+            // 更新數字顯示
+            document.getElementById('food').innerText = food;
+            document.getElementById('happy').innerText = happy;
+            
+            // 根據數值改變寵物表情
+            let pet = document.getElementById('petEmoji');
+            if (food <= 0 || happy <= 0) {
+                pet.innerText = "👻";
+                document.querySelector('h1').innerText = "小怪獸離開了...";
+            } else if (food < 30 || happy < 30) {
+                pet.innerText = "😭";
+            } else if (food > 80 && happy > 80) {
+                pet.innerText = "🥰";
+            } else {
+                pet.innerText = "👽";
             }
         }
 
-        function clickPlot(index) {
-            let p = plots[index];
-            let msgBox = document.getElementById("logMsg");
-
-            if (p.state === 'empty') {
-                // 取得下拉選單選擇的種子
-                let seedKey = document.getElementById("seedType").value;
-                let seed = cropData[seedKey];
-
-                if (money < seed.cost) {
-                    msgBox.innerText = "❌ 資金不足，無法購買此種子！";
-                    return;
-                }
-
-                // 扣錢並開始種植
-                money -= seed.cost;
-                p.state = 'growing';
-                p.crop = seed;
-                p.progress = 0;
-                p.maxTime = seed.time;
-                msgBox.innerText = `✅ 成功種下了 ${seed.name}！`;
-                updateUI();
-
-                // 啟動計時器 (每秒更新一次)
-                p.timer = setInterval(() => {
-                    p.progress++;
-                    if (p.progress >= p.maxTime) {
-                        clearInterval(p.timer);
-                        p.state = 'ready';
-                    }
-                    updateUI();
-                }, 1000);
-
-            } else if (p.state === 'growing') {
-                msgBox.innerText = "⏳ 作物還在長大，請耐心等候...";
-            } else if (p.state === 'ready') {
-                // 收成
-                money += p.crop.reward;
-                msgBox.innerText = `🎉 成功收成 ${p.crop.name}，賺了 ${p.crop.reward} 元！`;
-                p.state = 'empty';
-                p.crop = null;
-                updateUI();
-            }
+        function feed() {
+            if (food > 0 && happy > 0 && food < 100) food += 10;
+            updateUI();
         }
+
+        function play() {
+            if (food > 0 && happy > 0 && happy < 100) happy += 10;
+            updateUI();
+        }
+
+        // 每 3 秒自動扣數值，模擬時間流逝
+        setInterval(() => {
+            if (food > 0) food -= 5;
+            if (happy > 0) happy -= 5;
+            updateUI();
+        }, 3000);
     </script>
+
 </body>
 </html>
