@@ -18,13 +18,16 @@ const foodData = {
 };
 
 function openShop() {
-    if(!isAlive) return;
-    document.getElementById('shopOverlay').style.display = 'flex';
-    document.getElementById('shopCoins').innerText = coins;
+    if (typeof isAlive !== 'undefined' && !isAlive) return;
+    let shopOverlay = document.getElementById('shopOverlay');
+    let shopCoins = document.getElementById('shopCoins');
+    if (shopOverlay) shopOverlay.style.display = 'flex';
+    if (shopCoins && typeof coins !== 'undefined') shopCoins.innerText = coins;
 }
 
 function closeShop() {
-    document.getElementById('shopOverlay').style.display = 'none';
+    let shopOverlay = document.getElementById('shopOverlay');
+    if (shopOverlay) shopOverlay.style.display = 'none';
 }
 
 function buyFood(type) {
@@ -36,32 +39,35 @@ function buyFood(type) {
     if (type === 'bento') cost = 50;
     if (type === 'cake') cost = 80;
 
-    if (coins >= cost) {
+    if (typeof coins !== 'undefined' && coins >= cost) {
         coins -= cost;
         bag[type]++; 
-        say(`成功購買 ${foodData[type].name} 並放入背包！🛒`);
-        playAnimation('jump');
+        if (typeof say === 'function') say(`成功購買 ${foodData[type].name} 並放入背包！🛒`);
+        if (typeof playAnimation === 'function') playAnimation('jump');
         closeShop();
-        updateUI(); 
-        saveGame();
+        if (typeof updateUI === 'function') updateUI(); 
+        if (typeof saveGame === 'function') saveGame();
     } else {
-        say("金幣不夠喔... 快去遊戲室打工賺錢吧！💰");
-        playAnimation('shake');
+        if (typeof say === 'function') say("金幣不夠喔... 快去遊戲室打工賺錢吧！💰");
+        if (typeof playAnimation === 'function') playAnimation('shake');
     }
 }
 
 function openBag() {
-    if(!isAlive) return;
-    document.getElementById('bagOverlay').style.display = 'flex';
+    if (typeof isAlive !== 'undefined' && !isAlive) return;
+    let bagOverlay = document.getElementById('bagOverlay');
+    if (bagOverlay) bagOverlay.style.display = 'flex';
     renderBag();
 }
 
 function closeBag() {
-    document.getElementById('bagOverlay').style.display = 'none';
+    let bagOverlay = document.getElementById('bagOverlay');
+    if (bagOverlay) bagOverlay.style.display = 'none';
 }
 
 function renderBag() {
     let container = document.getElementById('bagContainer');
+    if (!container) return;
     let html = '';
     for (let key in bag) {
         let count = bag[key];
@@ -70,7 +76,7 @@ function renderBag() {
                     ${item.name}<br>
                     <span>數量: ${count}</span><br>
                     <span style="color:#008000;">+${item.feed} 飽食度</span>
-                 </div>`;
+                   </div>`;
     }
     container.innerHTML = html;
 }
@@ -79,30 +85,35 @@ function useFoodFromBag(type) {
     if (bag[type] > 0) {
         bag[type]--;
         let feedAmount = foodData[type].feed;
-        food += feedAmount;
-        gainExp(feedAmount / 2); 
+        if (typeof food !== 'undefined') food += feedAmount;
+        if (typeof gainExp === 'function') gainExp(feedAmount / 2); 
 
-        if (food <= 100) { 
-            say(`使用了 ${foodData[type].name}！好好吃喔！🍖`); 
-            playAnimation('jump'); 
-        } else if (food <= 150) { 
-            say(`使用了 ${foodData[type].name}！太撐了... 嗝！😱`); 
-            playAnimation('shake'); 
-        } else {
-            isAlive = false; 
-            say("吃太飽啦！受不了啦～～ 🏃‍♂️💨");
-            document.getElementById('title').innerText = "怪獸吃太飽逃跑了！";
-            document.getElementById('btnFeed').disabled = true; 
-            document.getElementById('btnPlay').disabled = true; 
-            petImg.classList.add('run-away'); 
-            localStorage.clear();
+        if (typeof food !== 'undefined') {
+            if (food <= 100) { 
+                if (typeof say === 'function') say(`使用了 ${foodData[type].name}！好好吃喔！🍖`); 
+                if (typeof playAnimation === 'function') playAnimation('jump'); 
+            } else if (food <= 150) { 
+                if (typeof say === 'function') say(`使用了 ${foodData[type].name}！太撐了... 嗝！😱`); 
+                if (typeof playAnimation === 'function') playAnimation('shake'); 
+            } else {
+                if (typeof isAlive !== 'undefined') isAlive = false; 
+                if (typeof say === 'function') say("吃太飽啦！受不了啦～～ 🏃‍♂️💨");
+                let titleEl = document.getElementById('title');
+                if (titleEl) titleEl.innerText = "怪獸吃太飽逃跑了！";
+                let btnFeed = document.getElementById('btnFeed');
+                let btnPlay = document.getElementById('btnPlay');
+                if (btnFeed) btnFeed.disabled = true; 
+                if (btnPlay) btnPlay.disabled = true; 
+                if (typeof petImg !== 'undefined' && petImg) petImg.classList.add('run-away'); 
+                localStorage.clear();
+            }
         }
 
         renderBag();
-        updateUI();
-        saveGame();
+        if (typeof updateUI === 'function') updateUI();
+        if (typeof saveGame === 'function') saveGame();
     } else {
-        say("這個道具沒有了喔！快去商店買或抽獎吧！");
-        playAnimation('shake');
+        if (typeof say === 'function') say("這個道具沒有了喔！快去商店買或抽獎吧！");
+        if (typeof playAnimation === 'function') playAnimation('shake');
     }
 }
