@@ -4,214 +4,424 @@
     <meta charset="UTF-8">
     <title>奇幻島科學 - 神秘小怪獸</title>
     <style>
-        body { 
-            text-align: center; 
-            font-family: "Microsoft JhengHei", sans-serif; 
-            background-color: #f0f8ff; 
-            padding-top: 30px; 
-        }
+        body { text-align: center; font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f8ff; padding-top: 10px; margin: 0; overflow: hidden; }
         
-        /* 數值面板 */
-        .stats { 
-            font-size: 24px; 
-            font-weight: bold; 
-            margin-bottom: 20px; 
-            background: white;
-            display: inline-block;
-            padding: 15px 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
+        .stats { font-size: 18px; font-weight: bold; margin-bottom: 5px; background: white; display: inline-block; padding: 10px 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); line-height: 1.5;}
+        .highlight { color: #ff8c00; font-size: 22px; }
+        
+        .speech-bubble { display: inline-block; background-color: #fff; border-radius: 20px; padding: 10px 20px; font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2); position: relative; z-index: 10; }
+        .speech-bubble::after { content: ""; position: absolute; bottom: -10px; left: 50%; margin-left: -10px; border-width: 10px 10px 0; border-style: solid; border-color: #fff transparent transparent transparent; }
+        
+        .pet-container { margin: 5px auto; height: 230px; display: flex; justify-content: center; align-items: flex-end; }
+        #petImg { width: 120px; height: 120px; transition: width 0.5s, height 0.5s; }
 
-        /* 對話框樣式 */
-        .speech-bubble {
-            display: inline-block;
-            background-color: #fff;
-            border-radius: 20px;
-            padding: 15px 25px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-            position: relative;
-        }
-        /* 對話框的下巴小三角形 */
-        .speech-bubble::after {
-            content: "";
-            position: absolute;
-            bottom: -15px;
-            left: 50%;
-            margin-left: -10px;
-            border-width: 15px 15px 0;
-            border-style: solid;
-            border-color: #fff transparent transparent transparent;
-        }
+        button.main-btn { font-size: 18px; padding: 10px 15px; margin: 5px; cursor: pointer; border-radius: 10px; background-color: #ffb6c1; border: 2px solid #ff69b4; font-weight: bold; box-shadow: 2px 4px 0px #ff69b4; }
+        button.main-btn:hover:not(:disabled) { background-color: #ff69b4; color: white; }
+        button.main-btn:active:not(:disabled) { box-shadow: 0px 0px 0px; transform: translateY(4px); }
+        button.main-btn:disabled { background-color: #ccc; border-color: #999; box-shadow: none; cursor: not-allowed; }
+        
+        #btnRestart { background-color: #e74c3c; border-color: #c0392b; box-shadow: 2px 4px 0px #c0392b; color: white;}
+        #btnRestart:hover { background-color: #c0392b; }
 
-        /* 寵物圖片樣式 */
-        .pet-container {
-            margin: 20px auto;
-            height: 250px;
-        }
-        #petImg { 
-            width: 200px; 
-            height: 200px;
-            /* 加入平滑過渡效果 */
-            transition: all 0.3s; 
-        }
-
-        /* 按鈕樣式 */
-        button { 
-            font-size: 20px; 
-            padding: 12px 25px; 
-            margin: 10px; 
-            cursor: pointer; 
-            border-radius: 10px; 
-            background-color: #ffb6c1; 
-            border: 2px solid #ff69b4; 
-            font-weight: bold;
-            box-shadow: 2px 4px 0px #ff69b4; 
-        }
-        button:hover { background-color: #ff69b4; color: white; }
-        button:active { box-shadow: 0px 0px 0px; transform: translateY(4px); }
-
-        /* --- 精彩的動畫特效 --- */
-        /* 彈跳動畫 (餵食) */
-        @keyframes jumpAnim {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-30px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
-        }
+        @keyframes jumpAnim { 0% { transform: translateY(0); } 50% { transform: translateY(-40px); } 100% { transform: translateY(0); } }
         .jump { animation: jumpAnim 0.5s ease-in-out; }
-
-        /* 搖晃動畫 (玩耍) */
-        @keyframes shakeAnim {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(-15deg); }
-            50% { transform: rotate(15deg); }
-            75% { transform: rotate(-15deg); }
-            100% { transform: rotate(0deg); }
-        }
+        @keyframes shakeAnim { 0%, 100% { transform: rotate(0deg); } 25%, 75% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
         .shake { animation: shakeAnim 0.5s ease-in-out; }
+        @keyframes runawayAnim { 0% { transform: translateX(0) rotate(0deg); opacity: 1; } 100% { transform: translateX(800px) rotate(720deg); opacity: 0; } }
+        .run-away { animation: runawayAnim 1.5s forwards; }
 
+        /* ================= 浮動視窗 (共用) ================= */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 95%; max-width: 650px; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 24px; cursor: pointer; color: #888; font-weight: bold; }
+        .close-btn:hover { color: red; }
+        
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+        .game-card { background: #f8f9fa; border: 2px solid #ddd; border-radius: 10px; padding: 10px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; display: flex; flex-direction: column; justify-content: center; }
+        .game-card:hover { transform: scale(1.05); border-color: #59b9c6; background: #e0f7fa; }
+        .game-card span { font-size: 12px; font-weight: normal; color: #555; margin-top: 5px; }
+        
+        #gameStage { width: 100%; height: 320px; background: #87CEEB; border-radius: 10px; position: relative; overflow: hidden; margin-top: 10px; border: 2px solid #333; display: none; }
+        #gameScoreBoard { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 5px; display: flex; justify-content: space-between; padding: 0 10px;}
+        .level-badge { background: #ff9800; color: white; padding: 2px 8px; border-radius: 5px; font-size: 16px; margin-left: 10px;}
+
+        #catcher { position: absolute; bottom: 10px; left: 50%; font-size: 50px; transform: translateX(-50%); pointer-events: none; }
+        #fallingFood { position: absolute; top: -50px; left: 50%; font-size: 40px; }
+        #memoryGrid { display: grid; gap: 8px; padding: 10px; height: 100%; box-sizing: border-box; justify-content: center; align-content: center;}
+        .memory-card { background: #3498db; color: transparent; display: flex; justify-content: center; align-items: center; font-size: 25px; border-radius: 8px; cursor: pointer; user-select: none; min-height: 45px;}
+        .memory-card.flipped { background: white; color: black; border: 2px solid #3498db; }
+        #whackGrid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 5px; height: 100%; padding: 5px; box-sizing: border-box;}
+        .hole { background: #8B4513; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; overflow: hidden; position: relative; border: 4px solid #5c2c16; }
+        .mole { display: none; }
+        .hole.active .mole { display: block; animation: jumpAnim 0.3s; }
+        #gameMsg { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 26px; font-weight: bold; color: red; background: rgba(255,255,255,0.9); padding: 15px 25px; border-radius: 10px; display: none; z-index: 10; box-shadow: 0 5px 15px rgba(0,0,0,0.3); pointer-events: none;}
+        #gameCanvas { display: block; margin: 0 auto; background: #222; border-radius: 5px; box-shadow: inset 0 0 10px #000; }
     </style>
 </head>
 <body>
 
-    <h1>👾 專屬電子怪獸 👾</h1>
+    <h1 id="title" style="margin: 5px 0;">👾 奇幻島專屬電子怪獸 👾</h1>
     
     <div class="stats">
-        🍖 飽食度: <span id="food">50</span> / 100 <br>
-        🎾 開心度: <span id="happy">50</span> / 100
+        ⭐ 等級: <span id="pLevel" class="highlight">1</span> (EXP: <span id="pExp">0</span>/<span id="pMaxExp">100</span>) &nbsp;|&nbsp; 💰 金幣: <span id="coins" class="highlight">0</span> <br>
+        🍖 飽食度: <span id="food">50</span>/100 &nbsp;|&nbsp; 🎾 開心度: <span id="happy">50</span>/100
     </div>
 
     <br>
-    
-    <!-- 對話框 -->
-    <div class="speech-bubble" id="dialogue">你好！我是奇幻島的小怪獸！</div>
+    <div class="speech-bubble" id="dialogue">你好！準備好一起玩了嗎？</div>
 
-    <!-- 圖片區塊 -->
     <div class="pet-container">
-        <!-- 這裡把 Emoji 換成了 img 標籤 -->
-        <img id="petImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=normal" alt="怪獸圖片">
+        <img id="petImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=baby" alt="怪獸圖片">
     </div>
 
     <div>
-        <button onclick="feed()">🍖 餵食</button>
-        <button onclick="play()">🎾 玩耍</button>
+        <button class="main-btn" id="btnFeed" onclick="openShop()">🛒 食物商店</button>
+        <button class="main-btn" id="btnPlay" onclick="openMenu()">🎮 遊戲室打工</button>
+        <button class="main-btn" id="btnRestart" onclick="hardReset()">⚠️ 刪除存檔</button>
+    </div>
+
+    <!-- ================= 商店浮動選單 ================= -->
+    <div class="modal-overlay" id="shopOverlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeShop()">✖</span>
+            <h2 style="margin-top:0;">🛒 奇幻島食物商店</h2>
+            <div style="font-size: 18px; margin-bottom: 10px;">目前金幣: 💰 <span id="shopCoins" class="highlight">0</span></div>
+            
+            <div class="menu-grid">
+                <div class="game-card" onclick="buyFood('cookie')">🍪 充飢餅乾<br><span>售價: 💰 10 金幣<br>回復 10 點飽食度</span></div>
+                <div class="game-card" onclick="buyFood('riceball')">🍙 營養飯糰<br><span>售價: 💰 20 金幣<br>回復 25 點飽食度</span></div>
+                <div class="game-card" onclick="buyFood('bento')">🍱 豪華大便當<br><span>售價: 💰 50 金幣<br>回復 70 點飽食度</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 遊戲浮動選單 ================= -->
+    <div class="modal-overlay" id="menuOverlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">✖</span>
+            <h2 id="modalTitle" style="margin-top:0;">選擇要打工的遊戲！(10分=1金幣)</h2>
+            
+            <div id="gameScoreBoard" style="display:none;">
+                <div>得分: <span id="gScore">0</span> <span id="gLevelDisplay" class="level-badge" style="display:none;">關卡 <span id="gLevel">1</span></span></div>
+                <span id="gLivesDisplay">生命: <span id="gLives">❤️❤️❤️</span></span>
+            </div>
+            
+            <div class="menu-grid" id="menuGrid">
+                <div class="game-card" onclick="startSnake()">🐍 貪吃蛇<span>穿牆機制，吃到自己結束</span></div>
+                <div class="game-card" onclick="startBreakout()">🧱 經典打磚塊<span>加入掉落技能寶石！</span></div>
+                <div class="game-card" onclick="startTetris()">🧩 俄羅斯方塊<span>削掉才算分，疊到頂結束</span></div>
+                <div class="game-card" onclick="startCatchGame()">🍎 天降接物<span>滑鼠接物，漏接扣血</span></div>
+                <div class="game-card" onclick="startMemoryGame()">🃏 翻牌對對碰<span>記憶考驗，無限生命</span></div>
+                <div class="game-card" onclick="startWhackGame()">🔨 瘋狂打地鼠<span>錯過會扣血，越打越快</span></div>
+            </div>
+
+            <div id="gameStage">
+                <div id="gameMsg">遊戲結束！</div>
+            </div>
+            
+            <button class="main-btn" id="btnEndGame" style="display:none; margin-top:10px;" onclick="closeModal()">領取薪水並返回</button>
+        </div>
     </div>
 
     <script>
-        // 1. 遊戲初始數值
-        let food = 50;
-        let happy = 50;
-        let isAlive = true;
+        // ================= 1. 寵物主系統與存檔邏輯 =================
+        let food = 50, happy = 50, isAlive = true;
+        let coins = 0, petLevel = 1, exp = 0; 
+        const maxLevel = 60; // 最高等級 60
+        let hungerTimer = null; // 飢餓計時器開關
 
-        // 2. 準備四種不同狀態的圖片網址 (學生可以在這裡換成自己的圖片網址)
-        const imgNormal = "https://api.dicebear.com/7.x/bottts/svg?seed=normal"; // 普通
-        const imgHappy = "https://api.dicebear.com/7.x/bottts/svg?seed=happy";   // 開心
-        const imgSad = "https://api.dicebear.com/7.x/bottts/svg?seed=sad";       // 傷心/肚子餓
-        const imgDead = "https://api.dicebear.com/7.x/bottts/svg?seed=dead";     // 離開/結束
+        const imgStage1 = "https://api.dicebear.com/7.x/bottts/svg?seed=baby123";  // 1~20等 (寶寶期)
+        const imgStage2 = "https://api.dicebear.com/7.x/bottts/svg?seed=normal456"; // 21~40等 (成長期)
+        const imgStage3 = "https://api.dicebear.com/7.x/bottts/svg?seed=king789";   // 41~60等 (究極體)
+        const imgSad = "https://api.dicebear.com/7.x/bottts/svg?seed=sad";       
+        const imgDead = "https://api.dicebear.com/7.x/bottts/svg?seed=dead";     
 
-        const petImageElement = document.getElementById('petImg');
-        const dialogueElement = document.getElementById('dialogue');
+        const petImg = document.getElementById('petImg');
+        const dialogue = document.getElementById('dialogue');
 
-        // 3. 顯示對話文字的函數
-        function say(text) {
-            dialogueElement.innerText = text;
+        function say(text) { dialogue.innerText = text; }
+        function playAnimation(anim) {
+            petImg.classList.remove('jump', 'shake');
+            void petImg.offsetWidth; 
+            petImg.classList.add(anim);
         }
 
-        // 4. 播放動畫的函數
-        function playAnimation(animationClass) {
-            // 先移除原有的動畫 class，重新加上去才會觸發動畫
-            petImageElement.classList.remove('jump', 'shake');
-            void petImageElement.offsetWidth; // 觸發瀏覽器重繪 (這行是動畫重啟的魔法)
-            petImageElement.classList.add(animationClass);
-        }
-
-        // 5. 更新畫面與圖片狀態
-        function updateUI() {
-            document.getElementById('food').innerText = food;
-            document.getElementById('happy').innerText = happy;
-            
-            if (!isAlive) return; // 如果已經結束遊戲，就不更新表情了
-
-            if (food <= 0 || happy <= 0) {
-                isAlive = false;
-                petImageElement.src = imgDead;
-                say("我先離開囉，掰掰 👻");
-                document.querySelector('h1').innerText = "遊戲結束...";
-            } else if (food < 30 || happy < 30) {
-                petImageElement.src = imgSad;
-                say("我感覺不太好... 幫幫我！😭");
-            } else if (food > 80 && happy > 80) {
-                petImageElement.src = imgHappy;
-            } else {
-                petImageElement.src = imgNormal;
-            }
-        }
-
-        // 6. 按下餵食按鈕
-        function feed() {
-            if (!isAlive) return; // 死掉不能按
-            
-            if (food < 100) {
-                food += 10;
-                if (food > 100) food = 100;
-            }
-            
-            say("好好吃喔！🍖 Yummy!"); // 文字回饋
-            playAnimation('jump');       // 動畫回饋：彈跳
-            updateUI();                  // 圖片與數值回饋
-        }
-
-        // 7. 按下玩耍按鈕
-        function play() {
-            if (!isAlive) return; 
-            
-            if (happy < 100) {
-                happy += 10;
-                if (happy > 100) happy = 100;
-            }
-            
-            say("太好玩了！🎾 哈哈！");   // 文字回饋
-            playAnimation('shake');       // 動畫回饋：搖晃
-            updateUI();                   // 圖片與數值回饋
-        }
-
-        // 8. 時間系統：每 3 秒自動扣數值
-        setInterval(() => {
-            if (isAlive) {
-                if (food > 0) food -= 5;
-                if (happy > 0) happy -= 5;
-                updateUI();
-                
-                // 如果沒有在特別的狀態，就說些隨機台詞
-                if (food >= 30 && happy >= 30 && food <= 80 && Math.random() > 0.5) {
-                    say("今天天氣真好啊～");
+        // 啟動線上扣血計時器
+        function startHungerTimer() {
+            if (hungerTimer) clearInterval(hungerTimer);
+            hungerTimer = setInterval(() => {
+                if (isAlive && food > 0 && happy > 0) {
+                    food -= 1; happy -= 1; updateUI(); saveGame();
                 }
+            }, 20000); 
+        }
+
+        // EXP 增加與等級上限控制 (最高 60 等)
+        function gainExp(amount) {
+            if (petLevel >= maxLevel || !isAlive) return; 
+            exp += amount;
+            let expNeeded = petLevel * 100; 
+            
+            if (exp >= expNeeded) {
+                exp -= expNeeded;
+                petLevel++;
+                
+                if (petLevel === 21 || petLevel === 41) {
+                    say(`太神奇了！怪獸進化到全新外型了！✨`);
+                } else {
+                    say(`等級提升！目前等級 ${petLevel} 級！🎉`);
+                }
+                playAnimation('jump');
             }
-        }, 3000);
+        }
+
+        function loadGame() {
+            if(localStorage.getItem('monsterFood')) {
+                food = parseInt(localStorage.getItem('monsterFood'));
+                happy = parseInt(localStorage.getItem('monsterHappy'));
+                coins = parseInt(localStorage.getItem('monsterCoins')) || 0;
+                petLevel = parseInt(localStorage.getItem('monsterLevel')) || 1;
+                exp = parseInt(localStorage.getItem('monsterExp')) || 0;
+                
+                // --- 離線狀態計算邏輯 (具備防餓死救援機制) ---
+                let lastSaveTime = parseInt(localStorage.getItem('monsterLastTime')) || Date.now();
+                let now = Date.now();
+                let elapsedSeconds = Math.floor((now - lastSaveTime) / 1000); 
+                
+                if (elapsedSeconds > 20 && isAlive) {
+                    let loss = Math.floor(elapsedSeconds / 20);
+                    
+                    // 最低降到 0，不會直接死亡，允許小朋友上線餵食或打工救援
+                    food = Math.max(0, food - loss);
+                    happy = Math.max(0, happy - loss);
+                    
+                    if (food === 0 || happy === 0) {
+                        say(`哎呀！你離開太久了，怪獸餓到快昏倒了！快去打工或買便當救牠！🆘`);
+                    } else {
+                        say(`你不在的這段時間，怪獸好想你，掉了 ${loss} 點數值！🥺`);
+                    }
+                } else {
+                    say("歡迎回來！進度已讀取！");
+                }
+            } else {
+                food = 50; happy = 50; // 一開始開局飽食度與開心度皆為 50
+            }
+            updateUI();
+        }
+
+        function saveGame() {
+            if(isAlive) {
+                localStorage.setItem('monsterFood', food);
+                localStorage.setItem('monsterHappy', happy);
+                localStorage.setItem('monsterCoins', coins);
+                localStorage.setItem('monsterLevel', petLevel);
+                localStorage.setItem('monsterExp', exp);
+                localStorage.setItem('monsterLastTime', Date.now());
+            }
+        }
+
+        function hardReset() {
+            if(confirm("確定要刪除進度重新養一隻嗎？")) {
+                localStorage.clear();
+                food = 50; happy = 50; coins = 0; petLevel = 1; exp = 0; isAlive = true;
+                document.getElementById('btnFeed').disabled = false; document.getElementById('btnPlay').disabled = false;
+                document.getElementById('title').innerText = "👾 奇幻島專屬電子怪獸 👾";
+                petImg.classList.remove('run-away'); say("新生命誕生了！"); updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('food').innerText = food; 
+            document.getElementById('happy').innerText = happy;
+            document.getElementById('coins').innerText = coins;
+            document.getElementById('shopCoins').innerText = coins; 
+            document.getElementById('pLevel').innerText = petLevel;
+            document.getElementById('pExp').innerText = Math.floor(exp);
+            document.getElementById('pMaxExp').innerText = petLevel * 100;
+
+            if (!isAlive) return; 
+
+            let baseSize = 120 + Math.floor((petLevel - 1) * 1.5); 
+            if (food > 100) baseSize += (food - 100) * 2; 
+            
+            petImg.style.width = baseSize + "px"; 
+            petImg.style.height = baseSize + "px";
+
+            if (food > 100) { 
+                petImg.src = imgSad; 
+            } else if (food <= 0 || happy <= 0) {
+                isAlive = false; petImg.src = imgDead; say("我先離開囉，掰掰 👻");
+                document.getElementById('title').innerText = "遊戲結束...";
+                document.getElementById('btnFeed').disabled = true; document.getElementById('btnPlay').disabled = true; 
+                localStorage.clear(); 
+            } else if (food < 30 || happy < 30) { 
+                petImg.src = imgSad; say("肚子空空... 也不開心 😭"); 
+            } else {
+                // 每 20 等換一個型態：1~20等 階段1，21~40等 階段2，41~60等 階段3
+                if (petLevel <= 20) petImg.src = imgStage1;
+                else if (petLevel <= 40) petImg.src = imgStage2;
+                else petImg.src = imgStage3;
+            }
+        }
+
+        // ================= 商店系統 =================
+        function openShop() {
+            if(!isAlive) return;
+            document.getElementById('shopOverlay').style.display = 'flex';
+            document.getElementById('shopCoins').innerText = coins;
+        }
+
+        function closeShop() {
+            document.getElementById('shopOverlay').style.display = 'none';
+        }
+
+        function buyFood(type) {
+            let cost = 0, feedAmount = 0;
+            if (type === 'cookie') { cost = 10; feedAmount = 10; }
+            if (type === 'riceball') { cost = 20; feedAmount = 25; }
+            if (type === 'bento') { cost = 50; feedAmount = 70; }
+
+            if (coins >= cost) {
+                coins -= cost;
+                food += feedAmount;
+                gainExp(feedAmount / 2); 
+                
+                if (food <= 100) { say("好好吃喔！買這個就對了！🍖"); playAnimation('jump'); }
+                else if (food <= 150) { say("太撐了... 嗝！😱"); playAnimation('shake'); }
+                else {
+                    isAlive = false; say("吃太飽啦！受不了啦～～ 🏃‍♂️💨");
+                    document.getElementById('title').innerText = "怪獸吃太飽逃跑了！";
+                    document.getElementById('btnFeed').disabled = true; document.getElementById('btnPlay').disabled = true; 
+                    petImg.classList.add('run-away'); localStorage.clear();
+                }
+                
+                closeShop();
+                updateUI(); saveGame();
+            } else {
+                say("金幣不夠喔... 快去遊戲室打工賺錢吧！💰");
+                playAnimation('shake');
+            }
+        }
+
+        // 載入與啟動計時器
+        loadGame();
+        startHungerTimer();
+
+        // ================= 2. 遊戲室與經濟系統 =================
+        let gameIntervals = [], score = 0, lives = 3, isGameRunning = false;
+        let currentKeyHandler = null; 
+
+        function setKeyHandler(handler) {
+            if (currentKeyHandler) document.removeEventListener('keydown', currentKeyHandler);
+            currentKeyHandler = handler;
+            document.addEventListener('keydown', currentKeyHandler);
+        }
+
+       function openMenu() {
+            if(!isAlive) return;
+            
+            // ⭐ 每次打開遊戲室（準備打工）時，立刻扣除 10 點飽食度（最低到 0）
+            food = Math.max(0, food - 10);
+            updateUI();
+            saveGame();
+
+            // 如果打開時剛好飽食度歸零，跳出提醒
+            if (food === 0) {
+                say("哎呀！打工讓怪獸肚子好餓，快撐不住啦！趕快賺錢買便當救牠！🆘");
+            } else {
+                say("出門打工賺錢囉！體力消耗了 10 點！💪");
+            }
+
+            // 進入遊戲室時暫停背景計時器
+            if (hungerTimer) clearInterval(hungerTimer);
+
+            document.getElementById('menuOverlay').style.display = 'flex'; 
+            document.getElementById('menuGrid').style.display = 'grid';
+            document.getElementById('gameStage').style.display = 'none'; 
+            document.getElementById('gameScoreBoard').style.display = 'none';
+            document.getElementById('btnEndGame').style.display = 'none'; 
+            document.getElementById('gameMsg').style.display = 'none';
+            document.getElementById('modalTitle').innerText = "選擇要打工的遊戲！(10分=1金幣)";
+        }
+
+        function closeModal() {
+            isGameRunning = false;
+            clearGameIntervals();
+            if (currentKeyHandler) document.removeEventListener('keydown', currentKeyHandler);
+            currentKeyHandler = null;
+            document.getElementById('menuOverlay').style.display = 'none';
+            
+            if(score > 0) {
+                let earnedCoins = Math.floor(score / 10); // 10分換1金幣
+                coins += earnedCoins;
+                happy += score * 2; if(happy > 100) happy = 100;
+                
+                // 這裡拿掉了原本的 food -= 10，改到上面「進去遊戲時」就扣
+                
+                gainExp(score); // 獲得等同於遊戲總得分的 EXP
+
+                say(`打工結束！賺了 ${earnedCoins} 金幣！💰`);
+                playAnimation('shake'); updateUI(); saveGame(); score = 0;
+            }
+
+            // 離開遊戲室回到大廳後，重新啟動計時器
+            startHungerTimer();
+        }
+        function clearGameIntervals() {
+            gameIntervals.forEach(clearInterval); gameIntervals.forEach(clearTimeout); gameIntervals = [];
+        }
+
+        function initGame(title, hasLevel = false, hasLives = true) {
+            score = 0; lives = 3; isGameRunning = true;
+            document.getElementById('gScore').innerText = score; updateLivesDisplay();
+            document.getElementById('modalTitle').innerText = title; document.getElementById('menuGrid').style.display = 'none';
+            document.getElementById('gameScoreBoard').style.display = 'flex';
+            
+            document.getElementById('gLevelDisplay').style.display = hasLevel ? 'inline-block' : 'none';
+            document.getElementById('gLivesDisplay').style.display = hasLives ? 'inline-block' : 'none';
+            
+            let stage = document.getElementById('gameStage');
+            stage.style.display = 'block'; stage.innerHTML = `<div id="gameMsg"></div>`; 
+            document.getElementById('btnEndGame').style.display = 'inline-block'; document.getElementById('btnEndGame').innerText = "提早領薪水結束";
+            clearGameIntervals();
+            return stage;
+        }
+        
+        function setupCanvas(stage, width=300, height=320) {
+            stage.innerHTML += `<canvas id="gameCanvas" width="${width}" height="${height}"></canvas>`;
+            stage.style.background = "#222"; 
+            return document.getElementById('gameCanvas').getContext('2d');
+        }
+
+        function updateLevel(lvl) { document.getElementById('gLevel').innerText = lvl; }
+        function updateLivesDisplay() { document.getElementById('gLives').innerText = '❤️'.repeat(lives) + '💔'.repeat(3 - lives); }
+
+        function loseLife() {
+            if(!isGameRunning) return;
+            lives--; updateLivesDisplay();
+            if(lives <= 0) { endGameMsg("血量耗盡，打工結束！"); }
+        }
+
+        function addScore(pts) {
+            if(!isGameRunning) return;
+            score += pts; document.getElementById('gScore').innerText = score;
+        }
+
+        function endGameMsg(text) {
+            isGameRunning = false; clearGameIntervals();
+            let msg = document.getElementById('gameMsg');
+            msg.innerText = text; msg.style.display = 'block';
+            document.getElementById('btnEndGame').innerText = "領取薪水並返回";
+        }
     </script>
+
+    <!-- 模組化引入各小遊戲 -->
+    <script src="snake.js"></script>
+    <script src="breakout.js"></script>
+    <script src="tetris.js"></script>
+    <script src="catch.js"></script>
+    <script src="memory.js"></script>
+    <script src="whack.js"></script>
+
 </body>
 </html>
